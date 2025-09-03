@@ -20,6 +20,7 @@ const LoginPage: React.FC = () => {
       await login(email, password);
     }
   }
+  
   return (
     <div className="flex justify-center items-center bg-gray-50 min-w-full min-h-screen">
       <div className="space-y-8 bg-white shadow-lg p-8 rounded-xl w-full max-w-md">
