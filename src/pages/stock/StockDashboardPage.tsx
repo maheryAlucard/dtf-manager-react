@@ -16,9 +16,12 @@ import {
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Table from '../../components/ui/Table';
+import useStock from '../../hooks/useStock';
 
 const StockDashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { stock, loading, error } = useStock();
 
   return (
     <div className="p-6">
@@ -159,13 +162,13 @@ const StockDashboardPage: React.FC = () => {
             <h2 className="mb-4 font-semibold text-gray-800 text-xl">Actions Rapides</h2>
             <p className="mb-4 text-gray-600">Tâches courantes de gestion des stocks.</p>
             <div className="gap-4 grid grid-cols-2">
-              <Link to="/stock/add-update">
+              <Link to="/dashboard/stock/add-update">
                 <Button className="flex flex-col justify-center items-center w-full h-24">
                   <Plus className="mb-2 w-6 h-6" />
                   <span>Ajouter Nouveau Stock</span>
                 </Button>
               </Link>
-              <Link to="/stock/movements">
+              <Link to="/dashboard/stock/movements">
                 <Button className="flex flex-col justify-center items-center w-full h-24">
                   <ArrowRight className="mb-2 w-6 h-6" />
                   <span>Mouvements de Stock</span>
@@ -222,6 +225,43 @@ const StockDashboardPage: React.FC = () => {
             </div>
           </Card>
         </div>
+      </div>
+      {/* Stock List Table */}
+      <div className="mb-8">
+        <Card className="p-6">
+          <h2 className="mb-4 font-semibold text-gray-800 text-xl">Liste des Articles en Stock</h2>
+          {loading ? (
+            <p>Chargement des stocks...</p>
+          ) : error ? (
+            <p className="text-red-500">Erreur: {error}</p>
+          ) : (
+            <Table
+              headers={[
+                { key: 'name', label: 'Nom' },
+                { key: 'type', label: 'Catégorie' },
+                { key: 'quantity', label: 'Quantité' },
+                { key: 'lowStockThreshold', label: 'Seuil Bas' },
+                { key: 'status', label: 'Statut' },
+              ]}
+              data={stock}
+              renderRow={(item) => (
+                <tr key={item.id} className="hover:bg-gray-50 border-gray-200 border-b">
+                  <td className="px-4 py-2">{item.name}</td>
+                  <td className="px-4 py-2">{item.type}</td>
+                  <td className="px-4 py-2">{item.quantity}</td>
+                  <td className="px-4 py-2">{item.lowStockThreshold}</td>
+                  <td className="px-4 py-2">
+                    {item.quantity <= item.lowStockThreshold ? (
+                      <Badge className="bg-yellow-500 text-white">Faible</Badge>
+                    ) : (
+                      <Badge className="bg-lime-500 text-white">En Stock</Badge>
+                    )}
+                  </td>
+                </tr>
+              )}
+            />
+          )}
+        </Card>
       </div>
     </div>
   );

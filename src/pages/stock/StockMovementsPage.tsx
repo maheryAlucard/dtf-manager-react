@@ -1,241 +1,268 @@
-import React, { useState } from 'react';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import React from 'react';
 import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
 import Table from '../../components/ui/Table';
-
-// Define the StockMovement interface
-interface StockMovement {
-  movementId: string;
-  dateTime: string;
-  product: string;
-  type: React.ReactNode; // Can be a Badge component
-  quantity: React.ReactNode; // Can include quantity and unit
-  stockChange: React.ReactNode; // From: X To: Y
-  reason: string;
-  operator: string;
-  notes: string;
-}
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import { LuSearch, LuFilter, LuCalendar, LuDownload } from 'react-icons/lu';
 
 const StockMovementsPage: React.FC = () => {
-  // Dummy data for stock movements
-  const dummyStockMovements: StockMovement[] = [
+  const mockMovements = [
     {
-      movementId: 'SM-2024-001',
-      dateTime: '2024-01-15 14:30',
+      id: 'SM-2024-001',
+      date: '2024-01-15',
+      time: '14:30',
       product: 'DTF Film Roll - 24inch',
-      type: <span className="inline-flex items-center bg-lime-50 px-2 py-1 rounded-md ring-1 ring-lime-600/20 ring-inset font-medium text-lime-700 text-xs">Entrée en stock</span>,
-      quantity: <span className="text-lime-600">+50 mètres</span>,
-      stockChange: <span>De: 245 À: 295</span>,
-      reason: 'Commande d\'achat #PO-2024-003',
+      type: 'Stock In',
+      quantity: '+50',
+      unit: 'meters',
+      from: '245',
+      to: '295',
+      reason: 'Purchase Order #PO-2024-003',
       operator: 'Admin',
-      notes: 'Fournisseur: PrintTech Solutions',
+      notes: 'Supplier: PrintTech Solutions',
     },
     {
-      movementId: 'SM-2024-002',
-      dateTime: '2024-01-15 16:45',
+      id: 'SM-2024-002',
+      date: '2024-01-15',
+      time: '16:45',
       product: 'Pigment Ink - Black',
-      type: <span className="inline-flex items-center bg-red-50 px-2 py-1 rounded-md ring-1 ring-red-600/20 ring-inset font-medium text-red-700 text-xs">Sortie de stock</span>,
-      quantity: <span className="text-red-600">-2 bouteilles</span>,
-      stockChange: <span>De: 12 À: 10</span>,
-      reason: 'Travail de production #J-2024-089',
+      type: 'Stock Out',
+      quantity: '2',
+      unit: 'bottles',
+      from: '12',
+      to: '10',
+      reason: 'Production Job #J-2024-089',
       operator: 'Operator1',
-      notes: 'Utilisé pour la commande de t-shirts en coton',
+      notes: 'Used for cotton t-shirt order',
     },
     {
-      movementId: 'SM-2024-003',
-      dateTime: '2024-01-14 09:15',
+      id: 'SM-2024-003',
+      date: '2024-01-14',
+      time: '09:15',
       product: 'DTF Powder - White',
-      type: <span className="inline-flex items-center bg-lime-50 px-2 py-1 rounded-md ring-1 ring-lime-600/20 ring-inset font-medium text-lime-700 text-xs">Entrée en stock</span>,
-      quantity: <span className="text-lime-600">+25 kg</span>,
-      stockChange: <span>De: 15 À: 40</span>,
-      reason: 'Commande d\'achat #PO-2024-002',
+      type: 'Stock In',
+      quantity: '+25',
+      unit: 'kg',
+      from: '15',
+      to: '40',
+      reason: 'Purchase Order #PO-2024-002',
       operator: 'Admin',
-      notes: 'Achat en gros pour le T1',
+      notes: 'Bulk purchase for Q1',
     },
     {
-      movementId: 'SM-2024-004',
-      dateTime: '2024-01-14 11:20',
+      id: 'SM-2024-004',
+      date: '2024-01-14',
+      time: '11:20',
       product: 'DTF Film Roll - 24inch',
-      type: <span className="inline-flex items-center bg-red-50 px-2 py-1 rounded-md ring-1 ring-red-600/20 ring-inset font-medium text-red-700 text-xs">Sortie de stock</span>,
-      quantity: <span className="text-red-600">-15 mètres</span>,
-      stockChange: <span>De: 295 À: 280</span>,
-      reason: 'Travail de production #J-2024-087',
+      type: 'Stock Out',
+      quantity: '15',
+      unit: 'meters',
+      from: '295',
+      to: '280',
+      reason: 'Production Job #J-2024-087',
       operator: 'Operator2',
-      notes: 'Commande d\'affiches grand format',
+      notes: '',
     },
     {
-      movementId: 'SM-2024-005',
-      dateTime: '2024-01-13 10:00',
+      id: 'SM-2024-005',
+      date: '2024-01-13',
+      time: '13:45',
       product: 'Pigment Ink - Cyan',
-      type: <span className="inline-flex items-center bg-yellow-50 px-2 py-1 rounded-md ring-1 ring-yellow-600/20 ring-inset font-medium text-yellow-700 text-xs">Ajustement</span>,
-      quantity: <span className="text-yellow-600">-1 bouteille</span>,
-      stockChange: <span>De: 8 À: 7</span>,
-      reason: 'Ajustement d\'inventaire - Endommagé',
+      type: 'Adjustment',
+      quantity: '-1',
+      unit: 'bottles',
+      from: '8',
+      to: '7',
+      reason: 'Inventory Adjustment - Damaged',
       operator: 'Admin',
-      notes: 'Bouteille endommagée pendant le transport',
+      notes: 'Bottle damaged during transport',
     },
     {
-      movementId: 'SM-2024-006',
-      dateTime: '2024-01-13 10:00',
-      product: 'Pigment Ink - Magenta',
-      type: <span className="inline-flex items-center bg-red-50 px-2 py-1 rounded-md ring-1 ring-red-600/20 ring-inset font-medium text-red-700 text-xs">Sortie de stock</span>,
-      quantity: <span className="text-red-600">-5 kg</span>,
-      stockChange: <span>De: 40 À: 35</span>,
-      reason: 'Travail de production #J-2024-090',
+      id: 'SM-2024-006',
+      date: '2024-01-13',
+      time: '15:30',
+      product: 'DTF Powder - White',
+      type: 'Stock Out',
+      quantity: '5',
+      unit: 'kg',
+      from: '40',
+      to: '35',
+      reason: 'Production Job #J-2024-085',
       operator: 'Operator1',
-      notes: 'Commande de t-shirts à grand volume',
+      notes: 'High volume t-shirt production',
     },
     {
-      movementId: 'SM-2024-007',
-      dateTime: '2024-01-12 15:00',
-      product: 'DTF Film Roll - 12inch',
-      type: <span className="inline-flex items-center bg-lime-50 px-2 py-1 rounded-md ring-1 ring-lime-600/20 ring-inset font-medium text-lime-700 text-xs">Entrée en stock</span>,
-      quantity: <span className="text-lime-600">+100 mètres</span>,
-      stockChange: <span>De: 150 À: 250</span>,
-      reason: 'Commande d\'achat #PO-2024-004',
+      id: 'SM-2024-007',
+      date: '2024-01-12',
+      time: '10:00',
+      product: 'Pigment Ink - Magenta',
+      type: 'Stock In',
+      quantity: '+6',
+      unit: 'bottles',
+      from: '4',
+      to: '10',
+      reason: 'Purchase Order #PO-2024-001',
       operator: 'Admin',
-      notes: 'Nouvelle livraison de stock',
+      notes: 'Regular stock replenishment',
     },
     {
-      movementId: 'SM-2024-008',
-      dateTime: '2024-01-12 09:00',
-      product: 'Pigment Ink - Yellow',
-      type: <span className="inline-flex items-center bg-yellow-50 px-2 py-1 rounded-md ring-1 ring-yellow-600/20 ring-inset font-medium text-yellow-700 text-xs">Ajustement</span>,
-      quantity: <span className="text-yellow-600">+3 bouteilles</span>,
-      stockChange: <span>De: 5 À: 8</span>,
-      reason: 'Ajustement d\'inventaire - Trouvé',
+      id: 'SM-2024-008',
+      date: '2024-01-12',
+      time: '14:15',
+      product: 'DTF Film Roll - 12inch',
+      type: 'Stock Out',
+      quantity: '8',
+      unit: 'meters',
+      from: '120',
+      to: '112',
+      reason: 'Production Job #J-2024-083',
       operator: 'Operator2',
-      notes: 'Trouvé dans l\'entrepôt arrière',
+      notes: 'Small format sticker production',
     },
   ];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // You can adjust this value
-
-  const totalPages = Math.ceil(dummyStockMovements.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-
-  const currentMovements = dummyStockMovements.slice(startIndex, endIndex);
-
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+  const getBadgeColor = (type: string) => {
+    switch (type) {
+      case 'Stock In':
+        return 'bg-lime-500';
+      case 'Stock Out':
+        return 'bg-red-500';
+      case 'Adjustment':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
   return (
-    <>
+    <div className="bg-gray-100 p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="font-bold text-gray-800 text-3xl">Mouvements de Stock</h1>
-          <p className="text-gray-600">Suivre et auditer tous les changements d'inventaire et les transactions de stock</p>
+          <p className="text-gray-600">Suivez et auditez toutes les modifications d'inventaire et les transactions de stock.</p>
         </div>
-        <div className="flex space-x-4">
-          <Button variant="secondary">Effacer les filtres</Button>
-          <Button variant="primary">
-            <span className="mr-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
-            </span>
-            Exporter les données
+        <div className="flex space-x-3">
+          <Button variant="ghost" className="hover:bg-gray-100 border-gray-300 text-gray-700">
+            <LuFilter className="mr-2" /> Effacer les filtres
+          </Button>
+          <Button variant="primary" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+            <LuDownload className="mr-2" /> Exporter les données
           </Button>
         </div>
       </div>
 
-      <Card className="mb-6 p-6">
-        <h2 className="mb-4 font-semibold text-gray-700 text-xl">Historique des mouvements</h2>
-        {/* Filters Section */}
-        <div className="gap-4 grid grid-cols-1 md:grid-cols-5 mb-6">
-          <div className="relative col-span-2">
-            <div className="left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 lucide lucide-search"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-            </div>
+      <Card className="shadow-lg mb-6 p-6">
+        <h2 className="mb-4 font-semibold text-gray-800 text-xl">Historique des Mouvements</h2>
+        <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 mb-6">
+          <div className="relative col-span-full lg:col-span-1">
+            <LuSearch className="top-1/2 left-3 absolute text-gray-400 -translate-y-1/2" />
             <Input
-              type="text"
               placeholder="Rechercher par produit, ID ou raison"
               className="pl-10"
             />
           </div>
-          {/* Product Dropdown */}
-          <div className="relative">
-            <select className="bg-white px-3 py-2 pr-8 border rounded-md w-full appearance-none">
-              <option>Tous les produits</option>
-              {/* Add product options here */}
-            </select>
-            <div className="right-0 absolute inset-y-0 flex items-center px-2 text-gray-700 pointer-events-none">
-              <svg className="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-            </div>
+          <Select
+            options={[{ value: 'all', label: 'Tous les produits' }]}
+            label="Produit"
+            className="col-span-full lg:col-span-1"
+          />
+          <Select
+            options={[
+              { value: 'all', label: 'Tous les types' },
+              { value: 'in', label: 'Entrée en stock' },
+              { value: 'out', label: 'Sortie de stock' },
+              { value: 'adjustment', label: 'Ajustement' },
+            ]}
+            label="Type de mouvement"
+            className="col-span-full lg:col-span-1"
+          />
+          <div className="relative col-span-full lg:col-span-1">
+            <LuCalendar className="top-1/2 left-3 absolute text-gray-400 -translate-y-1/2" />
+            <Input
+              type="date"
+              placeholder="Date de début"
+              className="pl-10"
+            />
           </div>
-          {/* Movement Type Dropdown */}
-          <div className="relative">
-            <select className="bg-white px-3 py-2 pr-8 border rounded-md w-full appearance-none">
-              <option>Tous les types</option>
-              {/* Add movement type options here */}
-            </select>
-            <div className="right-0 absolute inset-y-0 flex items-center px-2 text-gray-700 pointer-events-none">
-              <svg className="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-            </div>
+          <div className="relative col-span-full lg:col-span-1">
+            <LuCalendar className="top-1/2 left-3 absolute text-gray-400 -translate-y-1/2" />
+            <Input
+              type="date"
+              placeholder="Date de fin"
+              className="pl-10"
+            />
           </div>
-          <Input type="date" placeholder="Date de début" />
-          <Input type="date" placeholder="Date de fin" />
         </div>
 
-        {/* Table Section */}
         <Table
           headers={[
-            { key: 'movementId', label: 'ID MOUVEMENT' },
-            { key: 'dateTime', label: 'DATE & HEURE' },
-            { key: 'product', label: 'PRODUIT' },
-            { key: 'type', label: 'TYPE' },
-            { key: 'quantity', label: 'QUANTITÉ' },
-            { key: 'stockChange', label: 'CHANGEMENT DE STOCK' },
-            { key: 'reason', label: 'RAISON' },
-            { key: 'operator', label: 'OPÉRATEUR' },
-            { key: 'notes', label: 'NOTES' },
+            { key: 'id', label: 'ID Mouvement' },
+            { key: 'dateTime', label: 'Date & Heure' },
+            { key: 'product', label: 'Produit' },
+            { key: 'type', label: 'Type' },
+            { key: 'quantity', label: 'Quantité' },
+            { key: 'stockChange', label: 'Changement de Stock' },
+            { key: 'reason', label: 'Raison' },
+            { key: 'operator', label: 'Opérateur' },
+            { key: 'notes', label: 'Notes' },
           ]}
-          data={currentMovements}
+          data={mockMovements}
           renderRow={(movement) => (
-            <tr key={movement.movementId} className="hover:bg-gray-50 border-gray-200 border-b">
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.movementId}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.dateTime}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.product}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.type}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.quantity}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.stockChange}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.reason}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.operator}</td>
-              <td className="px-4 py-2 text-gray-800 text-sm">{movement.notes}</td>
+            <tr key={movement.id} className="hover:bg-gray-50 border-gray-200 border-b">
+              <td className="px-4 py-3">
+                <span className="font-medium text-cyan-700">{movement.id}</span>
+              </td>
+              <td className="px-4 py-3">
+                <div className="text-gray-700 text-sm">
+                  {movement.date} <br /> {movement.time}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <span className="text-gray-800">{movement.product}</span>
+              </td>
+              <td className="px-4 py-3">
+                <Badge className={`${getBadgeColor(movement.type)} text-white px-2 py-1 rounded-full text-xs`}>
+                  {movement.type === 'Stock In' ? 'Stock Entrant' : movement.type === 'Stock Out' ? 'Stock Sortant' : 'Ajustement'}
+                </Badge>
+              </td>
+              <td className="px-4 py-3">
+                <span className="text-gray-800">{movement.quantity} {movement.unit}</span>
+              </td>
+              <td className="px-4 py-3">
+                <div className="text-gray-700 text-sm">
+                  De: <span className="font-medium">{movement.from}</span> <br /> À: <span className="font-medium">{movement.to}</span>
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <span className="text-gray-800">{movement.reason}</span>
+              </td>
+              <td className="px-4 py-3">
+                <span className="text-gray-800">{movement.operator}</span>
+              </td>
+              <td className="px-4 py-3">
+                <span className="text-gray-600 text-sm">{movement.notes}</span>
+              </td>
             </tr>
           )}
         />
-        {/* Pagination */}
         <div className="flex justify-between items-center mt-4 text-gray-600 text-sm">
-          <span>Affichage de {startIndex + 1} à {Math.min(endIndex, dummyStockMovements.length)} sur {dummyStockMovements.length} mouvements</span>
+          <span>Affichage de 1 à 8 sur 8 mouvements</span>
           <div className="flex space-x-2">
-            <Button variant="secondary" size="small" onClick={handlePreviousPage} disabled={currentPage === 1}>Précédent</Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button
-                key={i + 1}
-                variant={currentPage === i + 1 ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </Button>
-            ))}
-            <Button variant="secondary" size="small" onClick={handleNextPage} disabled={currentPage === totalPages}>Suivant</Button>
+            <Button variant="ghost" size="small" className="hover:bg-gray-100 border-gray-300 text-gray-700">
+              Précédent
+            </Button>
+            <Button size="small" className="bg-cyan-600 hover:bg-cyan-700 text-white">
+              1
+            </Button>
+            <Button variant="ghost" size="small" className="hover:bg-gray-100 border-gray-300 text-gray-700">
+              Suivant
+            </Button>
           </div>
         </div>
       </Card>
-    </>
+    </div>
   );
 };
 

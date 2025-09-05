@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRouter from './routes/auth.js';
 import servicesRouter from './routes/services.js'; // Import services router
+import stockRouter from './routes/stock.js'; // Import stock router
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -11,6 +12,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRouter);
 app.use('/api/services', servicesRouter); // Use services router
+app.use('/api/stock', stockRouter); // Use stock router
 
 app.get('/', (req, res) => {
   res.send('Server is running!');
