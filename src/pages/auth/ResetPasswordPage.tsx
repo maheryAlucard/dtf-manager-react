@@ -1,21 +1,48 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../context/authStore';
 
-const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+const ResetPasswordPage: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { forgotPassword, isLoading, error } = useAuthStore();
+  const { resetPassword, isLoading, error } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) {
+      setMessage('Token de réinitialisation manquant.');
+    }
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(null); // Clear previous messages
-    const success = await forgotPassword(email);
+    setMessage(null);
+
+    if (!token) {
+      setMessage('Token de réinitialisation manquant.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setMessage('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+
+    const success = await resetPassword(token, newPassword);
     if (success) {
-      setMessage('Un lien de réinitialisation a été envoyé à votre adresse email si elle est enregistrée dans notre système.');
+      setMessage('Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } else {
-      setMessage(error || 'Une erreur est survenue lors de l\'envoi du lien de réinitialisation.');
+      setMessage(error || 'Échec de la réinitialisation du mot de passe. Le jeton est peut-être invalide ou a expiré.');
     }
   };
 
@@ -42,48 +69,53 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="text-center">
           <h3 className="font-bold text-gray-900 text-xl">Réinitialiser Votre Mot de Passe</h3>
           <p className="mt-2 text-gray-500 text-sm">
-            Entrez votre adresse email ou nom d'utilisateur et nous vous enverrons
-            un lien pour réinitialiser votre mot de passe
+            Veuillez entrer votre nouveau mot de passe.
           </p>
         </div>
 
         <form className="space-y-6 mt-8" onSubmit={handleSubmit}>
-          {/* Email/Username Field */}
+          {/* New Password Field */}
           <div>
             <label className="block font-medium text-gray-700 text-sm">
-              Adresse Email ou Nom d'utilisateur
+              Nouveau Mot de Passe
             </label>
             <div className="relative shadow-sm mt-1 rounded-md">
               <input
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 className="block shadow-sm px-3 py-3 border border-gray-300 focus:border-cyan-500 rounded-md focus:outline-none focus:ring-cyan-500 w-full appearance-none placeholder-gray-400"
-                placeholder="Entrer votre email ou nom d'utilisateur"
+                placeholder="Entrer votre nouveau mot de passe"
                 required
               />
-              <div className="right-0 absolute inset-y-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              </div>
             </div>
           </div>
 
-          {/* Send Reset Link Button */}
+          {/* Confirm New Password Field */}
+          <div>
+            <label className="block font-medium text-gray-700 text-sm">
+              Confirmer le Nouveau Mot de Passe
+            </label>
+            <div className="relative shadow-sm mt-1 rounded-md">
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="block shadow-sm px-3 py-3 border border-gray-300 focus:border-cyan-500 rounded-md focus:outline-none focus:ring-cyan-500 w-full appearance-none placeholder-gray-400"
+                placeholder="Confirmer votre nouveau mot de passe"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Reset Password Button */}
           <div>
             <button
               type="submit"
               className="group relative flex justify-center bg-cyan-600 hover:bg-cyan-700 px-4 py-3 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full font-medium text-white text-sm"
               disabled={isLoading}
             >
-              <span className="left-0 absolute inset-y-0 flex items-center pl-3">
-                <svg className="w-5 h-5 text-cyan-500 group-hover:text-cyan-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-              </span>
-              {isLoading ? 'Envoi en cours...' : 'Envoyer le Lien de Réinitialisation'}
+              {isLoading ? 'Réinitialisation en cours...' : 'Réinitialiser le Mot de Passe'}
             </button>
           </div>
         </form>
@@ -121,4 +153,4 @@ const ForgotPasswordPage: React.FC = () => {
   );
 };
 
-export default ForgotPasswordPage;
+export default ResetPasswordPage;

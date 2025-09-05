@@ -10,12 +10,9 @@ interface AuthState {
   login: (email: string, passwordHash: string) => Promise<boolean>;
   logout: () => void;
   setUser: (user: User | null) => void;
-  // Placeholder for IPC service interaction
-  // You would typically have an authService that interacts with ipcRenderer
-  // For now, these actions will be simplified.
-  // Placeholder for IPC service interaction
-  // You would typically have an authService that interacts with ipcRenderer
-  // For now, these actions will be simplified.
+  register: (name: string, email: string, password: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -27,25 +24,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, passwordHash: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Simulate API call for login
-      await new Promise(resolve => setTimeout(resolve, 500));
-      if (email === 'admin@example.com' && passwordHash === 'password') {
-        const loggedInUser: User = {
-          id: 'U001',
-          name: 'Admin User',
-          roleId: 'admin', // Assuming roleId is part of User type
-          email: email,
-          phone: null, // Added missing phone property
-          passwordHash: passwordHash,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        set({ user: loggedInUser, isAuthenticated: true, isLoading: false });
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password: passwordHash }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        set({ user: data.user, isAuthenticated: true, isLoading: false });
         return true;
+      } else {
+        set({ error: data.message || 'Login failed', isLoading: false });
+        return false;
       }
-      set({ error: 'Invalid credentials', isLoading: false });
-      return false;
     } catch (err: any) {
       set({ error: (err as Error).message || 'Login failed', isLoading: false });
       return false;
@@ -58,5 +54,84 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user: User | null) => {
     set({ user, isAuthenticated: !!user });
+  },
+
+  register: async (name: string, email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        set({ user: data.user, isAuthenticated: true, isLoading: false });
+        return true;
+      } else {
+        set({ error: data.message || 'Registration failed', isLoading: false });
+        return false;
+      }
+    } catch (err: any) {
+      set({ error: (err as Error).message || 'Registration failed', isLoading: false });
+      return false;
+    }
+  },
+
+  forgotPassword: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        set({ isLoading: false });
+        return true;
+      } else {
+        set({ error: data.message || 'Failed to send reset link', isLoading: false });
+        return false;
+      }
+    } catch (err: any) {
+      set({ error: (err as Error).message || 'Failed to send reset link', isLoading: false });
+      return false;
+    }
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        set({ isLoading: false });
+        return true;
+      } else {
+        set({ error: data.message || 'Failed to reset password', isLoading: false });
+        return false;
+      }
+    } catch (err: any) {
+      set({ error: (err as Error).message || 'Failed to reset password', isLoading: false });
+      return false;
+    }
   },
 }));

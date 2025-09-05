@@ -13,6 +13,7 @@ import { useThemeStore } from './context/themeStore';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterSetupPage from './pages/auth/RegisterSetupPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import OrdersListPage from './pages/orders/OrdersListPage';
 import OrderDetailsPage from './pages/orders/OrderDetailsPage';
@@ -193,6 +194,7 @@ const App = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-setup" element={<RegisterSetupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
             {/* Default redirect for unauthenticated users */}
             <Route path="*" element={<Navigate to="/login" replace />} />

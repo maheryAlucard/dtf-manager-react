@@ -132,6 +132,8 @@ model User {
   email        String?   @unique
   phone        String?
   passwordHash String?
+  resetToken   String?   @unique
+  resetTokenExpires DateTime?
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

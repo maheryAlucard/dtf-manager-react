@@ -2,20 +2,40 @@
   "name": "server-dtf-manager",
   "version": "1.0.0",
   "description": "server for the dtf manager app",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'npx tsx' src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mahery",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.15.0",
-    "express": "^5.1.0"
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.3.1",
+    "@types/uuid": "^9.0.0",
+    "@types/cors": "^2.8.17",
+    "dotenv": "^17.2.2",
+    "cors": "^2.8.5",
+    "eslint": "^9.34.0",
+    "express": "^5.1.0",
+    "install": "^0.13.0",
+    "nodemon": "^3.1.10",
+    "npm": "^11.6.0",
+    "prettier": "^3.6.2",
     "prisma": "^6.15.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }

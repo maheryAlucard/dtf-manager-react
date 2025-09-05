@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../context/authStore';
 
 const RegisterSetupPage: React.FC = () => {
+  const navigate = useNavigate();
+  const register = useAuthStore((state) => state.register);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    username: '',
     password: '',
     confirmPassword: ''
   });
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -16,12 +22,30 @@ const RegisterSetupPage: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    setLocalError(null); // Clear local error on input change
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle account creation logic here
-    console.log('Form submitted:', formData);
+    setLocalError(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setLocalError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setLocalError('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+
+    const success = await register(formData.fullName, formData.email, formData.password);
+
+    if (success) {
+      navigate('/dashboard'); // Redirect to dashboard on successful registration
+    } else {
+      // Error message will be handled by the global auth store error state
+    }
   };
 
   return (
@@ -90,26 +114,7 @@ const RegisterSetupPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block mb-1 font-medium text-gray-700 text-sm" htmlFor="username">Nom d'utilisateur</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Choisissez un nom d'utilisateur"
-                  className="px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600 w-full"
-                  required
-                />
-                <div className="left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            {/* Removed username field as it's not in the server schema */}
 
             <div>
               <label className="block mb-1 font-medium text-gray-700 text-sm" htmlFor="password">Mot de passe</label>
@@ -153,6 +158,13 @@ const RegisterSetupPage: React.FC = () => {
               </div>
             </div>
 
+            {localError && (
+              <p className="text-red-500 text-sm text-center">{localError}</p>
+            )}
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
             <div className="flex items-center mt-2">
               <input
                 id="terms"
@@ -170,8 +182,9 @@ const RegisterSetupPage: React.FC = () => {
           <button
             type="submit"
             className="flex justify-center bg-cyan-600 hover:bg-cyan-700 shadow-sm mt-6 px-4 py-3 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 w-full font-medium text-white text-sm transition-colors duration-200"
+            disabled={isLoading}
           >
-            Créer un compte
+            {isLoading ? 'Création du compte...' : 'Créer un compte'}
           </button>
         </form>
 
