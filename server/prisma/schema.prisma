@@ -1,0 +1,498 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite" // Changed from postgresql to sqlite
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  admin
+  employee
+}
+
+enum ProductCategoryType {
+  material
+  sellable
+  consumable
+  service
+}
+
+enum ProductUnit {
+  piece
+  sheet
+  meter
+  ml
+  g
+  service
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  adjustment
+}
+
+enum OrderStatus {
+  draft
+  confirmed
+  in_production
+  ready
+  delivered
+  cancelled
+}
+
+enum PrintJobStatus {
+  queued
+  printing
+  completed
+  failed
+  cancelled
+}
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  rejected
+  expired
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  void
+}
+
+enum PaymentMethod {
+  cash
+  card
+  bank_transfer
+  mobile_money
+  other
+}
+
+enum ActivityLogAction {
+  create
+  update
+  delete
+  status_change
+  login
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  name           RoleName         @unique
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  users          User[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id             String           @id @default(uuid())
+  code           String           @unique
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId], name: "ux_role_permission")
+  @@index([roleId], name: "ix_role_permissions_role")
+  @@index([permissionId], name: "ix_role_permissions_perm")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  roleId       String
+  name         String
+  email        String?   @unique
+  phone        String?
+  passwordHash String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  role         Role      @relation(fields: [roleId], references: [id])
+  stockMovements StockMovement[]
+  machineSettingsHistory MachineSettingsHistory[]
+  orders       Order[]
+  quotes       Quote[]
+  expenses     Expense[]
+  attachments  Attachment[]
+  activityLogs ActivityLog[]
+
+  @@index([roleId], name: "ix_users_role")
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  contact   String?
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders    Order[]
+  quotes    Quote[]
+
+  @@index([name], name: "ix_clients_name")
+}
+
+model ProductCategory {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  type      ProductCategoryType
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+}
+
+model Product {
+  id                String    @id @default(uuid())
+  categoryId        String?
+  sku               String?   @unique
+  name              String
+  description       String?
+  unit              ProductUnit @default(piece)
+  defaultPriceCents Int?
+  isStocked         Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  category          ProductCategory? @relation(fields: [categoryId], references: [id])
+  inventory         Inventory[]
+  stockMovements    StockMovement[]
+  orderItems        OrderItem[]
+  quoteItems        QuoteItem[]
+
+  @@index([name], name: "ix_products_name")
+  @@index([categoryId], name: "ix_products_category")
+}
+
+model Inventory {
+  id          String    @id @default(uuid())
+  productId   String    @unique
+  quantity    Float     @default(0)
+  minQuantity Float     @default(0)
+  location    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], name: "ix_inventory_product")
+}
+
+model StockMovement {
+  id            String          @id @default(uuid())
+  productId     String
+  type          StockMovementType
+  quantity      Float
+  unitCostCents Int?
+  reason        String?
+  relatedOrderId String?
+  createdBy     String?
+  createdAt     DateTime        @default(now())
+
+  product       Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order         Order?          @relation(fields: [relatedOrderId], references: [id])
+  user          User?           @relation(fields: [createdBy], references: [id])
+
+  @@index([productId], name: "ix_stock_moves_product")
+  @@index([relatedOrderId], name: "ix_stock_moves_order")
+  @@index([createdAt], name: "ix_stock_moves_created_at")
+}
+
+model Supplier {
+  id        String    @id @default(uuid())
+  name      String
+  contact   String?
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  expenses  Expense[]
+
+  @@index([name], name: "ix_suppliers_name")
+}
+
+model MachineProfile {
+  id                String    @id @default(uuid())
+  name              String
+  vendor            String?
+  model             String?
+  colorChannels     String?
+  resolutionDpi     Int?
+  lastMaintenanceAt DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  machineSettingsHistory MachineSettingsHistory[]
+  printJobs         PrintJob[]
+}
+
+model MachineSettingsHistory {
+  id               String    @id @default(uuid())
+  machineProfileId String
+  settingsJson     String
+  createdBy        String?
+  createdAt        DateTime  @default(now())
+
+  machineProfile   MachineProfile @relation(fields: [machineProfileId], references: [id], onDelete: Cascade)
+  user             User?          @relation(fields: [createdBy], references: [id])
+
+  @@index([machineProfileId], name: "ix_msettings_machine")
+  @@index([createdAt], name: "ix_msettings_created_at")
+}
+
+model Order {
+  id          String    @id @default(uuid())
+  orderNumber String    @unique
+  clientId    String
+  status      OrderStatus @default(draft)
+  dueDate     DateTime?
+  notes       String?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  client      Client    @relation(fields: [clientId], references: [id])
+  creator     User?     @relation(fields: [createdBy], references: [id])
+  items       OrderItem[]
+  printJobs   PrintJob[]
+  invoices    Invoice[]
+  stockMovements StockMovement[]
+
+  @@index([clientId], name: "ix_orders_client")
+  @@index([status], name: "ix_orders_status")
+  @@index([dueDate], name: "ix_orders_due")
+}
+
+model PrintJob {
+  id                  String    @id @default(uuid())
+  orderId             String
+  filmType            String?
+  inkSet              String?
+  widthMm             Int?
+  heightMm            Int?
+  colorMode           String?
+  passes              Int?
+  whiteInkLayers      Int?
+  curingTempC         Int?
+  curingTimeSec       Int?
+  machineProfileId    String?
+  estimatedPrintTimeMin Int?
+  actualPrintTimeMin  Int?
+  materialCostCents   Int?
+  laborCostCents      Int?
+  overheadCostCents   Int?
+  totalCostCents      Int?
+  sourceFilePath      String?
+  previewImagePath    String?
+  status              PrintJobStatus @default(queued)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  machineProfile      MachineProfile? @relation(fields: [machineProfileId], references: [id])
+  orderItems          OrderItem[]
+  quoteItems          QuoteItem[]
+
+  @@index([orderId], name: "ix_print_jobs_order")
+  @@index([machineProfileId], name: "ix_print_jobs_machine")
+  @@index([status], name: "ix_print_jobs_status")
+}
+
+model OrderItem {
+  id             String    @id @default(uuid())
+  orderId        String
+  productId      String?
+  printJobId     String?
+  description    String?
+  quantity       Float     @default(1)
+  unitPriceCents Int       @default(0)
+  discountCents  Int       @default(0)
+  taxRatePct     Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product?  @relation(fields: [productId], references: [id])
+  printJob       PrintJob? @relation(fields: [printJobId], references: [id], onDelete: SetNull)
+
+  @@index([orderId], name: "ix_order_items_order")
+  @@index([productId], name: "ix_order_items_product")
+  @@index([printJobId], name: "ix_order_items_print_job")
+}
+
+model Quote {
+  id          String    @id @default(uuid())
+  quoteNumber String    @unique
+  clientId    String
+  status      QuoteStatus @default(draft)
+  validUntil  DateTime?
+  notes       String?
+  pdfPath     String?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  client      Client    @relation(fields: [clientId], references: [id])
+  creator     User?     @relation(fields: [createdBy], references: [id])
+  quoteItems  QuoteItem[]
+
+  @@index([clientId], name: "ix_quotes_client")
+  @@index([status], name: "ix_quotes_status")
+}
+
+model QuoteItem {
+  id             String    @id @default(uuid())
+  quoteId        String
+  productId      String?
+  printJobId     String?
+  description    String?
+  quantity       Float     @default(1)
+  unitPriceCents Int       @default(0)
+  discountCents  Int       @default(0)
+  taxRatePct     Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  quote          Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product        Product?  @relation(fields: [productId], references: [id])
+  printJob       PrintJob? @relation(fields: [printJobId], references: [id], onDelete: SetNull)
+
+  @@index([quoteId], name: "ix_quote_items_quote")
+}
+
+model Invoice {
+  id            String    @id @default(uuid())
+  invoiceNumber String    @unique
+  orderId       String
+  currency      String    @default("MGA")
+  status        InvoiceStatus @default(draft)
+  issueDate     DateTime  @default(now())
+  dueDate       DateTime?
+  subtotalCents Int       @default(0)
+  taxCents      Int       @default(0)
+  totalCents    Int       @default(0)
+  paidCents     Int       @default(0)
+  pdfPath       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+
+  @@index([orderId], name: "ix_invoices_order")
+  @@index([status], name: "ix_invoices_status")
+}
+
+model Payment {
+  id          String    @id @default(uuid())
+  invoiceId   String
+  amountCents Int
+  method      PaymentMethod @default(cash)
+  paidAt      DateTime  @default(now())
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId], name: "ix_payments_invoice")
+}
+
+model ExpenseCategory {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  expenses  Expense[]
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  categoryId  String?
+  supplierId  String?
+  amountCents Int
+  occurredAt  DateTime  @default(now())
+  description String?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    ExpenseCategory? @relation(fields: [categoryId], references: [id])
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  creator     User?     @relation(fields: [createdBy], references: [id])
+
+  @@index([categoryId], name: "ix_expenses_category")
+}
+
+model Attachment {
+  id         String    @id @default(uuid())
+  entityType String
+  entityId   String
+  filePath   String
+  mimeType   String?
+  createdAt  DateTime  @default(now())
+  createdBy  String?
+
+  creator    User?     @relation(fields: [createdBy], references: [id])
+
+  @@index([entityType, entityId], name: "ix_attachments_entity")
+}
+
+model ActivityLog {
+  id         String    @id @default(uuid())
+  userId     String?
+  action     ActivityLogAction
+  entityType String
+  entityId   String
+  diffJson   String?
+  createdAt  DateTime  @default(now())
+
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId], name: "ix_activity_entity")
+}
+
+model AppConfig {
+  id        String    @id @default(uuid())
+  key       String    @unique
+  value     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
