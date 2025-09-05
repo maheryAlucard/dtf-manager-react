@@ -85,7 +85,7 @@ export const users = sqliteTable(
   })
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const usersRelations = relations(users, ({ one }) => ({
   role: one(roles, { fields: [users.roleId], references: [roles.id] }),
 }));
 
@@ -504,7 +504,7 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   invoice: one(invoices, { fields: [payments.invoiceId], references: [invoices.id] }),
 }));
 
-export const productsRelations = relations(products, ({ one, many }) => ({
+export const productsRelations = relations(products, ({ one }) => ({
   category: one(productCategories, { fields: [products.categoryId], references: [productCategories.id] }),
 }));
 

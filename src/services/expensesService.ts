@@ -1,10 +1,22 @@
-import { Expense } from "../types/expense";
+import { type Expense } from "../types/expense";
 
 
 const mockExpenses: Expense[] = [
-  { id: 'E001', description: 'Ink purchase', amount: 150.00, category: 'Raw Materials', date: '2023-01-05' },
-  { id: 'E002', description: 'Electricity bill', amount: 75.00, category: 'Electricity', date: '2023-01-10' },
-  { id: 'E003', description: 'Employee Salary', amount: 1200.00, category: 'Salaries', date: '2023-01-20' },
+  {
+    id: 'E001', description: 'Ink purchase', amount: 150.00, category: 'Raw Materials', date: '2023-01-05',
+    company: "",
+    status: ""
+  },
+  {
+    id: 'E002', description: 'Electricity bill', amount: 75.00, category: 'Electricity', date: '2023-01-10',
+    company: "",
+    status: ""
+  },
+  {
+    id: 'E003', description: 'Employee Salary', amount: 1200.00, category: 'Salaries', date: '2023-01-20',
+    company: "",
+    status: ""
+  },
 ];
 
 export const expensesService = {

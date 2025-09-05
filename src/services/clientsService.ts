@@ -1,4 +1,4 @@
-import { Client } from "../types/client";
+import { type Client } from "../types/client";
 
 const mockClients: Client[] = [
   { id: 'C001', name: 'Client A', contact: 'client.a@example.com', orderHistory: 5, outstandingPayments: 0.00 },

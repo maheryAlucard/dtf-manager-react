@@ -1,4 +1,4 @@
-import { Invoice } from "../types/invoice";
+import { type Invoice } from "../types/invoice";
 
 
 const mockInvoices: Invoice[] = [

@@ -8,8 +8,8 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ toggleSidebar }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { logout } = useAuthStore();
-  
+  const { logout, user } = useAuthStore();
+
   return (
     <div className="flex justify-between items-center bg-white p-4 border-gray-200 border-b h-16">
       {/* Left Side: Sidebar Toggle, Dashboard Title and Welcome Message */}
@@ -56,8 +56,8 @@ const Topbar: React.FC<TopbarProps> = ({ toggleSidebar }) => {
               JD
             </div>
             <div className="text-sm">
-              <h3 className="font-medium text-gray-800">John Doe</h3>
-              <p className="text-gray-500 text-xs">Administrateur</p>
+              <h3 className="font-medium text-gray-800">{user?.name}</h3>
+              <p className="text-gray-500 text-xs">{user?.email}</p>
             </div>
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </button>
