@@ -13,7 +13,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
   const location = useLocation();
 
   const isActive = (path: string) => {
@@ -33,16 +38,18 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col bg-[#111827] bg-dark-gray-800 w-64 h-screen">
+    <div className={`flex flex-col bg-[#111827] bg-dark-gray-800 h-screen transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
       {/* Logo and Brand */}
-      <div className="flex items-center p-4 border-dark-gray-700 border-b h-16">
+      <div className={`flex items-center p-4 border-dark-gray-700 border-b h-16 ${isCollapsed ? 'justify-center' : ''}`}>
         <div className="bg-primary-cyan mr-3 p-2 rounded-lg">
           <BellRing className="w-6 h-6 text-white" />
         </div>
-        <div>
-          <h1 className="font-bold text-white text-xl">DTF Manager</h1>
-          <p className="text-gray-400 text-xs">Production Suite</p>
-        </div>
+        {!isCollapsed && (
+          <div>
+            <h1 className="font-bold text-white text-xl">DTF Manager</h1>
+            <p className="text-gray-400 text-xs">Production Suite</p>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
@@ -52,11 +59,11 @@ const Sidebar: React.FC = () => {
             key={item.name}
             to={item.path}
             className={`flex items-center p-3 rounded-lg text-gray-300 hover:bg-dark-gray-700 hover:text-white
-              ${isActive(item.path) ? 'bg-primary-cyan text-white' : ''}`}
+              ${isActive(item.path) ? 'bg-primary-cyan text-white' : ''} ${isCollapsed ? 'justify-center' : ''}`}
           >
-            <item.icon className="mr-3 w-5 h-5" />
-            <span>{item.name}</span>
-            {item.badge && (
+            <item.icon className={`${isCollapsed ? 'mr-0' : 'mr-3'} w-5 h-5`} />
+            {!isCollapsed && <span>{item.name}</span>}
+            {item.badge && !isCollapsed && (
               <span className={`ml-auto px-2 py-0.5 text-xs font-semibold rounded-full
                 ${item.name === 'Commandes' ? 'bg-highlight-yellow text-dark-gray-900' : 'bg-error-red text-white'}`}
               >
@@ -68,13 +75,15 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* System Status */}
-      <div className="p-4 border-dark-gray-700 border-t">
-        <div className="flex items-center text-gray-400 text-sm">
+      <div className={`p-4 border-dark-gray-700 border-t ${isCollapsed ? 'justify-center' : ''}`}>
+        <div className={`flex items-center text-gray-400 text-sm ${isCollapsed ? 'justify-center' : ''}`}>
           <div className="bg-success-lime mr-2 rounded-full w-3 h-3"></div>
-          <div>
-            <p className="text-white">Système opérationnel</p>
-            <p className="text-gray-500 text-xs">Dernière sauvegarde: 2 heures</p>
-          </div>
+          {!isCollapsed && (
+            <div>
+              <p className="text-white">Système opérationnel</p>
+              <p className="text-gray-500 text-xs">Dernière sauvegarde: 2 heures</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

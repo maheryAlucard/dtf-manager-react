@@ -1,13 +1,22 @@
 import React from 'react';
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown, Menu } from 'lucide-react';
 
-const Topbar: React.FC = () => {
+interface TopbarProps {
+  toggleSidebar: () => void;
+}
+
+const Topbar: React.FC<TopbarProps> = ({ toggleSidebar }) => {
   return (
     <div className="flex justify-between items-center bg-white p-4 border-gray-200 border-b h-16">
-      {/* Left Side: Dashboard Title and Welcome Message */}
-      <div>
-        <h2 className="font-bold text-gray-800 text-xl">Dashboard</h2>
-        <p className="text-gray-500 text-sm">Welcome back! Here's what's happening with your business today.</p>
+      {/* Left Side: Sidebar Toggle, Dashboard Title and Welcome Message */}
+      <div className="flex items-center">
+        <button onClick={toggleSidebar} className="mr-4 p-2 focus:outline-none text-gray-500 hover:text-gray-700">
+          <Menu className="w-6 h-6" />
+        </button>
+        <div>
+          <h2 className="font-bold text-gray-800 text-xl">Dashboard</h2>
+          <p className="text-gray-500 text-sm">Welcome back! Here's what's happening with your business today.</p>
+        </div>
       </div>
 
       {/* Right Side: Notifications and User Profile */}
