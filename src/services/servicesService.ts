@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Service } from "../types/service";
 
-const API_URL = 'http://localhost:3001/api/services'; // Assuming your server runs on port 3001
+const API_URL = `${import.meta.env.VITE_BASE_APP_API_URL}/services`;
 
 export const getServices = async (): Promise<Service[]> => {
   const response = await axios.get<Service[]>(API_URL);

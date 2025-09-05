@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
@@ -6,130 +6,35 @@ import Table from '../../components/ui/Table';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { LuSearch, LuFilter, LuCalendar, LuDownload } from 'react-icons/lu';
+import { stockService, type StockMovementItem } from '../../services/stockService';
 
 const StockMovementsPage: React.FC = () => {
-  const mockMovements = [
-    {
-      id: 'SM-2024-001',
-      date: '2024-01-15',
-      time: '14:30',
-      product: 'DTF Film Roll - 24inch',
-      type: 'Stock In',
-      quantity: '+50',
-      unit: 'meters',
-      from: '245',
-      to: '295',
-      reason: 'Purchase Order #PO-2024-003',
-      operator: 'Admin',
-      notes: 'Supplier: PrintTech Solutions',
-    },
-    {
-      id: 'SM-2024-002',
-      date: '2024-01-15',
-      time: '16:45',
-      product: 'Pigment Ink - Black',
-      type: 'Stock Out',
-      quantity: '2',
-      unit: 'bottles',
-      from: '12',
-      to: '10',
-      reason: 'Production Job #J-2024-089',
-      operator: 'Operator1',
-      notes: 'Used for cotton t-shirt order',
-    },
-    {
-      id: 'SM-2024-003',
-      date: '2024-01-14',
-      time: '09:15',
-      product: 'DTF Powder - White',
-      type: 'Stock In',
-      quantity: '+25',
-      unit: 'kg',
-      from: '15',
-      to: '40',
-      reason: 'Purchase Order #PO-2024-002',
-      operator: 'Admin',
-      notes: 'Bulk purchase for Q1',
-    },
-    {
-      id: 'SM-2024-004',
-      date: '2024-01-14',
-      time: '11:20',
-      product: 'DTF Film Roll - 24inch',
-      type: 'Stock Out',
-      quantity: '15',
-      unit: 'meters',
-      from: '295',
-      to: '280',
-      reason: 'Production Job #J-2024-087',
-      operator: 'Operator2',
-      notes: '',
-    },
-    {
-      id: 'SM-2024-005',
-      date: '2024-01-13',
-      time: '13:45',
-      product: 'Pigment Ink - Cyan',
-      type: 'Adjustment',
-      quantity: '-1',
-      unit: 'bottles',
-      from: '8',
-      to: '7',
-      reason: 'Inventory Adjustment - Damaged',
-      operator: 'Admin',
-      notes: 'Bottle damaged during transport',
-    },
-    {
-      id: 'SM-2024-006',
-      date: '2024-01-13',
-      time: '15:30',
-      product: 'DTF Powder - White',
-      type: 'Stock Out',
-      quantity: '5',
-      unit: 'kg',
-      from: '40',
-      to: '35',
-      reason: 'Production Job #J-2024-085',
-      operator: 'Operator1',
-      notes: 'High volume t-shirt production',
-    },
-    {
-      id: 'SM-2024-007',
-      date: '2024-01-12',
-      time: '10:00',
-      product: 'Pigment Ink - Magenta',
-      type: 'Stock In',
-      quantity: '+6',
-      unit: 'bottles',
-      from: '4',
-      to: '10',
-      reason: 'Purchase Order #PO-2024-001',
-      operator: 'Admin',
-      notes: 'Regular stock replenishment',
-    },
-    {
-      id: 'SM-2024-008',
-      date: '2024-01-12',
-      time: '14:15',
-      product: 'DTF Film Roll - 12inch',
-      type: 'Stock Out',
-      quantity: '8',
-      unit: 'meters',
-      from: '120',
-      to: '112',
-      reason: 'Production Job #J-2024-083',
-      operator: 'Operator2',
-      notes: 'Small format sticker production',
-    },
-  ];
+  const [movements, setMovements] = useState<StockMovementItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await stockService.getMovements();
+        setMovements(data);
+      } catch (e) {
+        setError('Impossible de charger les mouvements');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const getBadgeColor = (type: string) => {
     switch (type) {
-      case 'Stock In':
+      case 'IN':
         return 'bg-lime-500';
-      case 'Stock Out':
+      case 'OUT':
         return 'bg-red-500';
-      case 'Adjustment':
+      case 'adjustment':
         return 'bg-yellow-500';
       default:
         return 'bg-gray-500';
@@ -196,6 +101,11 @@ const StockMovementsPage: React.FC = () => {
           </div>
         </div>
 
+        {loading ? (
+          <p>Chargement...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
         <Table
           headers={[
             { key: 'id', label: 'ID Mouvement' },
@@ -203,12 +113,11 @@ const StockMovementsPage: React.FC = () => {
             { key: 'product', label: 'Produit' },
             { key: 'type', label: 'Type' },
             { key: 'quantity', label: 'Quantité' },
-            { key: 'stockChange', label: 'Changement de Stock' },
             { key: 'reason', label: 'Raison' },
             { key: 'operator', label: 'Opérateur' },
             { key: 'notes', label: 'Notes' },
           ]}
-          data={mockMovements}
+          data={movements}
           renderRow={(movement) => (
             <tr key={movement.id} className="hover:bg-gray-50 border-gray-200 border-b">
               <td className="px-4 py-3">
@@ -216,37 +125,32 @@ const StockMovementsPage: React.FC = () => {
               </td>
               <td className="px-4 py-3">
                 <div className="text-gray-700 text-sm">
-                  {movement.date} <br /> {movement.time}
+                  {new Date(movement.createdAt).toLocaleDateString()} <br /> {new Date(movement.createdAt).toLocaleTimeString()}
                 </div>
               </td>
               <td className="px-4 py-3">
-                <span className="text-gray-800">{movement.product}</span>
+                <span className="text-gray-800">{movement.productName}</span>
               </td>
               <td className="px-4 py-3">
                 <Badge className={`${getBadgeColor(movement.type)} text-white px-2 py-1 rounded-full text-xs`}>
-                  {movement.type === 'Stock In' ? 'Stock Entrant' : movement.type === 'Stock Out' ? 'Stock Sortant' : 'Ajustement'}
+                  {movement.type === 'IN' ? 'Stock Entrant' : movement.type === 'OUT' ? 'Stock Sortant' : 'Ajustement'}
                 </Badge>
               </td>
               <td className="px-4 py-3">
-                <span className="text-gray-800">{movement.quantity} {movement.unit}</span>
+                <span className="text-gray-800">{movement.quantity}</span>
               </td>
               <td className="px-4 py-3">
-                <div className="text-gray-700 text-sm">
-                  De: <span className="font-medium">{movement.from}</span> <br /> À: <span className="font-medium">{movement.to}</span>
-                </div>
+                <span className="text-gray-800">{movement.reason || ''}</span>
               </td>
               <td className="px-4 py-3">
-                <span className="text-gray-800">{movement.reason}</span>
+                <span className="text-gray-800">{movement.createdBy}</span>
               </td>
               <td className="px-4 py-3">
-                <span className="text-gray-800">{movement.operator}</span>
-              </td>
-              <td className="px-4 py-3">
-                <span className="text-gray-600 text-sm">{movement.notes}</span>
+                <span className="text-gray-600 text-sm"></span>
               </td>
             </tr>
           )}
-        />
+        />)}
         <div className="flex justify-between items-center mt-4 text-gray-600 text-sm">
           <span>Affichage de 1 à 8 sur 8 mouvements</span>
           <div className="flex space-x-2">

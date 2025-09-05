@@ -1,20 +1,6 @@
 import { useState, useEffect } from 'react';
-
-interface StockItem {
-  id: string;
-  name: string;
-  type: 'Film' | 'Ink' | 'T-Shirt' | 'Accessory';
-  quantity: number;
-  lowStockThreshold: number;
-}
-
-const mockStock: StockItem[] = [
-  { id: 'S001', name: 'Film Type X', type: 'Film', quantity: 150, lowStockThreshold: 10 },
-  { id: 'S002', name: 'Ink Color Y', type: 'Ink', quantity: 75, lowStockThreshold: 5 },
-  { id: 'S003', name: 'T-Shirt White M', type: 'T-Shirt', quantity: 500, lowStockThreshold: 50 },
-  { id: 'S004', name: 'Film Type Z', type: 'Film', quantity: 5, lowStockThreshold: 10 },
-  { id: 'S005', name: 'Ink Color Black', type: 'Ink', quantity: 2, lowStockThreshold: 5 },
-];
+import { stockService } from '../services/stockService';
+import type { StockItem } from '../types/stock';
 
 const useStock = () => {
   const [stock, setStock] = useState<StockItem[]>([]);
@@ -25,9 +11,8 @@ const useStock = () => {
     const fetchStock = async () => {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setStock(mockStock);
+        const items = await stockService.getStockItems();
+        setStock(items);
       } catch (err) {
         setError('Failed to fetch stock');
       } finally {

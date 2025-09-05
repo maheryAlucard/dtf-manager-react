@@ -5,25 +5,38 @@ import Card from '../../components/ui/Card';
 import { Check } from 'lucide-react';
 import Select from '../../components/ui/Select';
 import Textarea from '../../components/ui/Textarea';
+import useStock from '../../hooks/useStock';
+import { useAuthStore } from '../../context/authStore';
+import { stockService } from '../../services/stockService';
 
 type FormMode = 'add' | 'update';
 
 const AddUpdateStockPage: React.FC = () => {
   const [formMode, setFormMode] = useState<FormMode>('add');
-  const [productName, setProductName] = useState('');
+  const { stock: _stock } = useStock();
+  const user = useAuthStore((s) => s.user);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [newProductName, setNewProductName] = useState('');
   const [initialStockQuantity, setInitialStockQuantity] = useState(0);
   const [unitOfMeasurement, setUnitOfMeasurement] = useState('Mètres');
   const [reasonForAddition, setReasonForAddition] = useState('');
   const [notes, setNotes] = useState('');
+  const [unitCostCents, setUnitCostCents] = useState<number>(0);
   const [errors, setErrors] = useState<{ [key: string]: string }>();
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!productName.trim()) {
-      newErrors.productName = 'Le nom du produit est requis.';
+    if (formMode === 'add') {
+      if (!newProductName.trim()) {
+        newErrors.productName = 'Le nom du produit est requis.';
+      }
+    } else {
+      if (!selectedProductId) {
+        newErrors.productId = 'La sélection du produit est requise.';
+      }
     }
-    if (initialStockQuantity < 0) {
-      newErrors.initialStockQuantity = 'La quantité de stock initiale ne peut pas être négative.';
+    if (initialStockQuantity <= 0) {
+      newErrors.initialStockQuantity = 'La quantité doit être supérieure à 0.';
     }
     if (!reasonForAddition.trim()) {
       newErrors.reasonForAddition = 'La raison de l\'ajout est requise.';
@@ -32,23 +45,47 @@ const AddUpdateStockPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!validateForm()) {
       return;
     }
-    console.log('Ajouter un produit:', {
-      productName,
-      initialStockQuantity,
-      unitOfMeasurement,
-      reasonForAddition,
-      notes,
-    });
-    // TODO: Implement actual add product logic
+    try {
+      if (!user?.id) {
+        alert('Vous devez être connecté pour effectuer cette action.');
+        return;
+      }
+
+      const productId = crypto.randomUUID();
+
+      await stockService.addOrUpdateStock({
+        productId,
+        productName: newProductName.trim(),
+        quantity: initialStockQuantity,
+        type: 'IN',
+        reason: reasonForAddition || undefined,
+        createdBy: user.id,
+        unitCostCents: unitCostCents || 0,
+      });
+
+      alert('Stock ajouté avec succès');
+      setSelectedProductId('');
+      setNewProductName('');
+      setInitialStockQuantity(0);
+      setUnitOfMeasurement('Mètres');
+      setReasonForAddition('');
+      setNotes('');
+      setUnitCostCents(0);
+    } catch (e) {
+      alert('Échec de l\'ajout du stock');
+    }
   };
 
-  const handleUpdateStock = () => {
-    console.log('Logique de mise à jour du stock ici');
-    // TODO: Implement actual update stock logic
+  const handleUpdateStock = async () => {
+    try {
+      alert('Sélection de produit et quantités nécessaires pour appeler /api/stock/add-update');
+    } catch (e) {
+      alert('Échec de la mise à jour du stock');
+    }
   };
 
   return (
@@ -87,9 +124,9 @@ const AddUpdateStockPage: React.FC = () => {
             <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
               <Input
                 label="Nom du produit"
-                placeholder="Entrez le nom du produit"
-                value={productName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
+                placeholder="Nom du nouveau produit"
+                value={newProductName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewProductName(e.target.value)}
                 error={errors?.productName}
               />
               <Input
@@ -108,6 +145,14 @@ const AddUpdateStockPage: React.FC = () => {
                   { value: 'Units', label: 'Unités' },
                   { value: 'Kilograms', label: 'Kilogrammes' },
                 ]}
+              />
+              <Input
+                label="Coût unitaire (en Ar)"
+                type="number"
+                min={0}
+                placeholder="ex: 1200 pour 12,00"
+                value={unitCostCents}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUnitCostCents(Number(e.target.value))}
               />
               <Input
                 label="Raison de l'ajout"

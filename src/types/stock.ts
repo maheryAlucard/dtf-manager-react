@@ -1,7 +1,9 @@
 export interface StockItem {
   id: string;
   name: string;
-  type: 'Film' | 'Ink' | 'T-Shirt' | 'Accessory';
+  type: string;
   quantity: number;
   lowStockThreshold: number;
+  unit?: string;
+  totalValue?: number;
 }

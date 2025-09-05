@@ -30,10 +30,10 @@ router.get('/', authenticateToken, async (req, res) => {
       id: item.id,
       name: item.name,
       type: item.category?.name || 'N/A',
-      quantity: item.inventory?.quantity || 0,
-      lowStockThreshold: item.inventory?.minQuantity || 0,
+      quantity: item.inventory[0]?.quantity || 0,
+      lowStockThreshold: item.inventory[0]?.minQuantity || 0,
       unit: item.unit,
-      totalValue: (item.inventory?.quantity || 0) * (item.defaultPriceCents || 0), // Assuming defaultPriceCents is per unit
+      totalValue: (item.inventory[0]?.quantity || 0) * (item.defaultPriceCents || 0), // Assuming defaultPriceCents is per unit
     }));
 
     res.json(formattedStock);
@@ -155,6 +155,7 @@ router.post(
   authenticateToken,
   [
     body('productId').isUUID().withMessage('Product ID must be a valid UUID'),
+    body('productName').optional().isString().trim().notEmpty().withMessage('Product name must be a non-empty string'),
     body('quantity').isFloat({ gt: 0 }).withMessage('Quantity must be a positive number'),
     body('type').isIn(['IN', 'OUT', 'adjustment']).withMessage('Invalid movement type'),
     body('reason').optional().isString().trim().notEmpty().withMessage('Reason must be a non-empty string'),
@@ -163,11 +164,26 @@ router.post(
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
-    const { productId, quantity, type, reason, unitCostCents, createdBy } = req.body;
+    const { productId, productName, quantity, type, reason, unitCostCents, createdBy } = req.body;
 
     try {
       if (!productId) {
         return res.status(400).json({ message: 'Product ID is required' });
+      }
+
+      // Ensure product exists. If not, create it with provided name.
+      const existingProduct = await prisma.product.findUnique({ where: { id: productId as string } });
+      if (!existingProduct) {
+        if (!productName || typeof productName !== 'string' || !productName.trim()) {
+          return res.status(400).json({ message: 'Product does not exist. Provide a valid productName to create it.' });
+        }
+        await prisma.product.create({
+          data: {
+            id: productId as string,
+            name: productName.trim(),
+            isStocked: true,
+          },
+        });
       }
 
       let inventoryItem = await prisma.inventory.findUnique({
