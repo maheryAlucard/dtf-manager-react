@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
     { name: 'Factures', icon: FileText, path: '/dashboard/invoices' },
     { name: 'Dépenses', icon: DollarSign, path: '/dashboard/expenses' },
     { name: 'Revenus', icon: TrendingUp, path: '/dashboard/revenues' },
-    { name: 'Rapports', icon: BarChart2, path: '/dashboard/reports/financial' },
+    { name: 'Rapports', icon: BarChart2, path: '/dashboard/reports' },
     { name: 'Paramètres', icon: Settings, path: '/dashboard/settings/company' },
   ];
 

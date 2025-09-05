@@ -24,8 +24,7 @@ import StockMovementsPage from './pages/stock/StockMovementsPage';
 import AddUpdateStockPage from './pages/stock/AddUpdateStockPage';
 import ExpensesPage from './pages/expenses/ExpensesPage';
 import ExportCenterPage from './pages/reports/ExportCenterPage';
-import FinancialReportsPage from './pages/reports/FinancialReportsPage';
-import ProductionReportsPage from './pages/reports/ProductionReportsPage';
+import ReportsDashboardPage from './pages/reports/ReportsDashboardPage';
 import ProfitAnalysisPage from './pages/revenues/ProfitAnalysisPage';
 import RevenuePage from './pages/revenues/RevenuePage';
 import BackupRestorePage from './pages/settings/BackupRestorePage';
@@ -139,15 +138,9 @@ const App = () => {
                 }
               />
               <Route
-                path="/dashboard/reports/financial"
+                path="/dashboard/reports"
                 element={
-                  <FinancialReportsPage />
-                }
-              />
-              <Route
-                path="/dashboard/reports/production"
-                element={
-                  <ProductionReportsPage />
+                  <ReportsDashboardPage />
                 }
               />
               <Route
