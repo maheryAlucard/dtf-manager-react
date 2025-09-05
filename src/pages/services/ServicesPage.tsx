@@ -1,7 +1,6 @@
 import React from 'react';
-import { Plus, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import type { Service } from '../../types/service';
 import { useServices } from '../../hooks/useServices';

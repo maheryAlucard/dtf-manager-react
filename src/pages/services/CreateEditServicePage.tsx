@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Plus, MinusCircle, ChevronDown } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -10,20 +10,26 @@ import type { StockItem } from '../../types/stock'; // Changed from Stock to Sto
 import { useServices } from '../../hooks/useServices';
 import useStock from '../../hooks/useStock'; // Changed to default import
 
+type FormMode = 'add' | 'update';
+
 const CreateEditServicePage: React.FC = () => {
-  const navigate = useNavigate();
   const { serviceId } = useParams<{ serviceId: string }>();
   const { services, createService, updateService } = useServices();
   const { stock: stockItems, loading: isLoadingStock, error: stockError } = useStock();
 
+  const [formMode, setFormMode] = useState<FormMode>('add');
   const [serviceName, setServiceName] = useState('');
   const [serviceDescription, setServiceDescription] = useState('');
   const [servicePrice, setServicePrice] = useState('');
   const [selectedElements, setSelectedElements] = useState<ServiceElement[]>([]);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState('');
+  const [errors, setErrors] = useState<{ [key: string]: string }>();
 
   useEffect(() => {
     if (serviceId && services.length > 0) {
+      setFormMode('update');
+      setSelectedServiceId(serviceId);
       const serviceToEdit = services.find(s => s.id === serviceId);
       if (serviceToEdit) {
         setEditingService(serviceToEdit);
@@ -38,8 +44,39 @@ const CreateEditServicePage: React.FC = () => {
       setServiceDescription('');
       setServicePrice('');
       setSelectedElements([]);
+      setSelectedServiceId('');
+      setFormMode('add');
     }
   }, [serviceId, services]);
+
+  const resetForm = () => {
+    setServiceName('');
+    setServiceDescription('');
+    setServicePrice('');
+    setSelectedElements([]);
+    setSelectedServiceId('');
+    setEditingService(null);
+    setErrors(undefined);
+  };
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (formMode === 'update' && !selectedServiceId) {
+      newErrors.selectedServiceId = 'Veuillez sélectionner un service.';
+    }
+    if (!serviceName.trim()) {
+      newErrors.serviceName = 'Le nom du service est requis.';
+    }
+    const priceValue = parseFloat(servicePrice);
+    if (isNaN(priceValue) || priceValue <= 0) {
+      newErrors.servicePrice = 'Le prix doit être supérieur à 0.';
+    }
+    if (selectedElements.some(e => !e.stockItemId || e.quantity <= 0)) {
+      newErrors.elements = 'Chaque élément doit avoir un article et une quantité > 0.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleAddElement = () => {
     setSelectedElements([...selectedElements, { stockItemId: '', quantity: 1 }]); // Changed stockId to stockItemId
@@ -61,26 +98,38 @@ const CreateEditServicePage: React.FC = () => {
   };
 
   const handleSaveService = async () => {
-    if (!serviceName || !servicePrice) return;
-
-    const priceInCents = parseInt((parseFloat(servicePrice) * 100).toFixed(0));
-
-    const serviceData = {
-      name: serviceName,
-      description: serviceDescription,
-      price: priceInCents,
-      elements: selectedElements.filter(e => e.stockItemId !== '' && e.quantity > 0), // Changed stockId to stockItemId
-    };
-
-    if (editingService) {
-      await updateService({
-        ...editingService,
-        ...serviceData,
-      });
-    } else {
-      await createService(serviceData);
+    if (!validateForm()) {
+      return;
     }
-    navigate('/dashboard/services');
+
+    try {
+      const priceInCents = parseInt((parseFloat(servicePrice) * 100).toFixed(0));
+      const serviceData = {
+        name: serviceName.trim(),
+        description: serviceDescription.trim(),
+        price: priceInCents,
+        elements: selectedElements.filter(e => e.stockItemId !== '' && e.quantity > 0),
+      };
+
+      if (formMode === 'update') {
+        const base = editingService || services.find(s => s.id === selectedServiceId);
+        if (!base) {
+          alert('Service introuvable.');
+          return;
+        }
+        await updateService({
+          ...base,
+          ...serviceData,
+        });
+        alert('Service mis à jour avec succès');
+      } else {
+        await createService(serviceData);
+        alert('Service créé avec succès');
+      }
+      resetForm();
+    } catch (err) {
+      alert('Une erreur est survenue lors de la sauvegarde du service');
+    }
   };
 
   if (isLoadingStock) return <div className="p-4 text-text-secondary">Chargement des stocks...</div>;
@@ -96,20 +145,57 @@ const CreateEditServicePage: React.FC = () => {
 
   return (
     <div className="p-8">
-      <h1 className="mb-2 font-bold text-gray-800 text-3xl">
-        {editingService ? 'Modifier le Service' : 'Ajouter un Nouveau Service'}
-      </h1>
-      <p className="mb-6 text-gray-600">
-        {editingService ? 'Modifiez les détails de votre service existant.' : 'Créez un nouveau service et définissez ses composants.'}
-      </p>
+      <h1 className="mb-2 font-bold text-neutral-dark-gray text-3xl">Gestion des services</h1>
+      <p className="mb-6 text-text-secondary">Ajouter de nouveaux services ou mettre à jour des services existants</p>
+
+      <div className="flex space-x-4 mb-6">
+        <Button
+          onClick={() => { setFormMode('add'); resetForm(); }}
+          className={`px-6 py-2 rounded-lg ${formMode === 'add' ? 'bg-primary-cyan text-white' : 'bg-light-gray text-text-primary'}`}
+        >
+          Ajouter un nouveau service
+        </Button>
+        <Button
+          onClick={() => { setFormMode('update'); resetForm(); }}
+          className={`px-6 py-2 rounded-lg ${formMode === 'update' ? 'bg-primary-cyan text-white' : 'bg-light-gray text-text-primary'}`}
+        >
+          Mettre à jour un service existant
+        </Button>
+      </div>
 
       <Card className="mb-6 p-6">
         <div className="space-y-4">
+          {formMode === 'update' && (
+            <Select
+              label="Sélectionner un service"
+              value={selectedServiceId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                const id = e.target.value;
+                setSelectedServiceId(id);
+                const serviceToEdit = services.find(s => s.id === id) || null;
+                setEditingService(serviceToEdit);
+                if (serviceToEdit) {
+                  setServiceName(serviceToEdit.name);
+                  setServiceDescription(serviceToEdit.description || '');
+                  setServicePrice((serviceToEdit.price / 100).toString());
+                  setSelectedElements(serviceToEdit.elements || []);
+                } else {
+                  setServiceName('');
+                  setServiceDescription('');
+                  setServicePrice('');
+                  setSelectedElements([]);
+                }
+              }}
+              options={[{ value: '', label: 'Choisir...' }, ...services.map(s => ({ value: s.id, label: s.name }))]}
+              error={errors?.selectedServiceId}
+            />
+          )}
           <Input
             label="Nom du Service"
             value={serviceName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setServiceName(e.target.value)}
             placeholder="Nom du service"
+            error={errors?.serviceName}
           />
           <Input
             label="Description"
@@ -123,6 +209,7 @@ const CreateEditServicePage: React.FC = () => {
             value={servicePrice}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setServicePrice(e.target.value)}
             placeholder="0.00"
+            error={errors?.servicePrice}
           />
 
           <h3 className="mt-6 mb-3 font-semibold text-text-primary text-xl">Éléments de Stock Utilisés</h3>
@@ -154,6 +241,7 @@ const CreateEditServicePage: React.FC = () => {
                         options={availableStockOptions}
                         value={element.stockItemId}
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleElementChange(index, 'stockItemId', e.target.value)}
+                        error={errors?.elements}
                       />
                     </td>
                     <td className="px-6 py-4 text-gray-500 text-sm whitespace-nowrap">
@@ -163,6 +251,7 @@ const CreateEditServicePage: React.FC = () => {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleElementChange(index, 'quantity', e.target.value)}
                         placeholder="1"
                         min="1"
+                        error={errors?.elements}
                       />
                     </td>
                     <td className="px-6 py-4 font-medium text-sm text-right whitespace-nowrap">
@@ -190,9 +279,17 @@ const CreateEditServicePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                resetForm();
+              }}
+            >
+              Annuler
+            </Button>
             <Button onClick={handleSaveService} className="w-full md:w-auto">
-              {editingService ? 'Sauvegarder les modifications' : 'Créer le Service'}
+              {formMode === 'update' ? 'Mettre à jour le service' : 'Créer le service'}
             </Button>
           </div>
         </div>
