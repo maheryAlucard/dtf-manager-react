@@ -22,6 +22,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
   const location = useLocation();
 
   const isActive = (path: string) => {
+    if (path === '/dashboard/settings') {
+      return location.pathname.startsWith('/dashboard/settings');
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -34,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
     { name: 'Dépenses', icon: DollarSign, path: '/dashboard/expenses' },
     { name: 'Revenus', icon: TrendingUp, path: '/dashboard/revenues' },
     { name: 'Rapports', icon: BarChart2, path: '/dashboard/reports' },
-    { name: 'Paramètres', icon: Settings, path: '/dashboard/settings/company' },
+    { name: 'Paramètres', icon: Settings, path: '/dashboard/settings' },
   ];
 
   return (

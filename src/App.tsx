@@ -27,9 +27,7 @@ import ExportCenterPage from './pages/reports/ExportCenterPage';
 import ReportsDashboardPage from './pages/reports/ReportsDashboardPage';
 import ProfitAnalysisPage from './pages/revenues/ProfitAnalysisPage';
 import RevenuePage from './pages/revenues/RevenuePage';
-import BackupRestorePage from './pages/settings/BackupRestorePage';
-import CompanySettingsPage from './pages/settings/CompanySettingsPage';
-import NotificationsPage from './pages/settings/NotificationsPage';
+import SettingsPage from './pages/settings/SettingsPage'; // Import the new SettingsPage
 import ProfileSettingsPage from './pages/users/ProfileSettingsPage';
 import UserManagementPage from './pages/users/UserManagementPage';
 import MainLayout from './components/layout/MainLayout';
@@ -158,26 +156,10 @@ const App = () => {
                 }
               />
               <Route
-                path="/dashboard/settings/backup-restore"
+                path="/dashboard/settings/*" // Use a wildcard to allow nested routes within SettingsPage
                 element={
                   <ProtectedRoute>
-                    <BackupRestorePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/settings/company"
-                element={
-                  <ProtectedRoute>
-                    <CompanySettingsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/settings/notifications"
-                element={
-                  <ProtectedRoute>
-                    <NotificationsPage />
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />
