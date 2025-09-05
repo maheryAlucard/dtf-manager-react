@@ -11,6 +11,7 @@ import {
   BellRing,
   FileText,
   TrendingUp,
+  Wrench, // Import Wrench icon
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
     { name: 'Tableau de bord', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Commandes', icon: ShoppingCart, path: '/dashboard/orders', badge: 23 },
     { name: 'Inventaire', icon: Package, path: '/dashboard/stock', badge: 8 },
+    { name: 'Services', icon: Wrench, path: '/dashboard/services' },
     { name: 'Clients', icon: Users, path: '/dashboard/clients' },
     { name: 'Factures', icon: FileText, path: '/dashboard/invoices' },
     { name: 'Dépenses', icon: DollarSign, path: '/dashboard/expenses' },

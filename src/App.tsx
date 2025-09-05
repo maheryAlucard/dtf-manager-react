@@ -17,6 +17,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import OrdersListPage from './pages/orders/OrdersListPage';
 import OrderDetailsPage from './pages/orders/OrderDetailsPage';
+import CreateOrderPage from './pages/orders/CreateOrderPage'; // Import the new page
 import InvoiceGeneratorPage from './pages/invoices/InvoiceGeneratorPage';
 import ClientsListPage from './pages/clients/ClientsListPage';
 import ClientProfilePage from './pages/clients/ClientProfilePage';
@@ -32,6 +33,8 @@ import SettingsPage from './pages/settings/SettingsPage'; // Import the new Sett
 import ProfileSettingsPage from './pages/users/ProfileSettingsPage';
 import UserManagementPage from './pages/users/UserManagementPage';
 import MainLayout from './components/layout/MainLayout';
+import ServicesPage from './pages/services/ServicesPage';
+import CreateEditServicePage from './pages/services/CreateEditServicePage'; // Import the new page
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -89,9 +92,33 @@ const App = () => {
                 }
               />
               <Route
+                path="/dashboard/orders/new"
+                element={
+                  <CreateOrderPage />
+                }
+              />
+              <Route
                 path="/dashboard/invoices"
                 element={
                   <InvoiceGeneratorPage />
+                }
+              />
+              <Route
+                path="/dashboard/services"
+                element={
+                  <ServicesPage />
+                }
+              />
+              <Route
+                path="/dashboard/services/new"
+                element={
+                  <CreateEditServicePage />
+                }
+              />
+              <Route
+                path="/dashboard/services/edit/:serviceId"
+                element={
+                  <CreateEditServicePage />
                 }
               />
               <Route

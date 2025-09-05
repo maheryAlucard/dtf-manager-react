@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface TableProps<T> {
-  headers: { key: keyof T; label: string; }[];
+  headers: { key: keyof T | string; label: string; }[]; // Allow string for custom keys like 'actions'
   data: T[];
   renderRow: (item: T) => React.ReactNode;
 }

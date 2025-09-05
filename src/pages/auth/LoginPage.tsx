@@ -6,8 +6,8 @@ const LoginPage: React.FC = () => {
   const { login, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('r.dagoswat@gmail.com');
+  const [password, setPassword] = useState('test123');
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {

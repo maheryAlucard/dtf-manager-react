@@ -39,7 +39,10 @@ const OrdersListPage: React.FC = () => {
         </div>
 
         <div className="flex space-x-4">
-          <button className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 shadow-md px-5 py-2 rounded-lg text-white">
+          <button
+            className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 shadow-md px-5 py-2 rounded-lg text-white"
+            onClick={() => navigate('/dashboard/orders/new')}
+          >
             <Plus width="20" height="20" />
             <span>Nouvelle commande</span>
           </button>
